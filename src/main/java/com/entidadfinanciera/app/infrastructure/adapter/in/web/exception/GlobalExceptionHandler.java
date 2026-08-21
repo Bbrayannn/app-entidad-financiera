@@ -95,6 +95,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
+    @ExceptionHandler(com.entidadfinanciera.app.domain.exception.TransferenciaMismaCuentaException.class)
+    public ResponseEntity<ErrorResponseDTO> manejarTransferenciaMismaCuenta(
+            com.entidadfinanciera.app.domain.exception.TransferenciaMismaCuentaException ex,
+            HttpServletRequest request) {
+        ErrorResponseDTO body = new ErrorResponseDTO(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
     private ResponseEntity<ErrorResponseDTO> construirRespuesta(HttpStatus status, RuntimeException ex,
                                                                 HttpServletRequest request) {
         ErrorResponseDTO body = new ErrorResponseDTO(
