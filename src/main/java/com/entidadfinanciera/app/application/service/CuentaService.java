@@ -87,6 +87,11 @@ public class CuentaService implements CrearCuentaUseCase, CambiarEstadoCuentaUse
         Cuenta cuenta = cuentaRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new CuentaNoEncontradaException("Cuenta no encontrada con id " + id));
 
+        if (!cuenta.puedeTransicionarA(nuevoEstado)) {
+            throw new TransicionEstadoInvalidaException(
+                    "No se puede cambiar de " + cuenta.getEstado() + " a " + nuevoEstado + ".");
+        }
+
         if (nuevoEstado == EstadoCuenta.CANCELADA && !cuenta.puedeCancelarse()) {
             throw new SaldoInvalidoParaCancelarException(
                     "Solo se pueden cancelar cuentas con saldo igual a $0. Saldo actual: " + cuenta.getSaldo());
@@ -121,4 +126,6 @@ public class CuentaService implements CrearCuentaUseCase, CambiarEstadoCuentaUse
 
         cuentaRepositoryPort.eliminar(id);
     }
+
+
 }

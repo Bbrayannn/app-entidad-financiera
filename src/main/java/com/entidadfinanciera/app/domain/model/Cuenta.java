@@ -37,6 +37,13 @@ public class Cuenta {
         return tipoCuenta == TipoCuenta.AHORROS;
     }
 
+    public boolean puedeTransicionarA(EstadoCuenta nuevoEstado) {
+        if (this.estado == EstadoCuenta.CANCELADA) {
+            return false; // estado terminal, no admite ningún cambio
+        }
+        return this.estado != nuevoEstado; // no permitir "cambiar" al mismo estado
+    }
+
     public void validarSaldoParaTipo(BigDecimal nuevoSaldo) {
         if (esAhorros() && nuevoSaldo.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalStateException("Una cuenta de ahorros no puede tener saldo negativo.");
