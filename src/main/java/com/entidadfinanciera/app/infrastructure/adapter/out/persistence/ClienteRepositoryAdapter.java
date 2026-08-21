@@ -12,17 +12,20 @@ import java.util.Optional;
 public class ClienteRepositoryAdapter implements ClienteRepositoryPort {
 
     private final ClienteJpaRepository jpaRepository;
+    private final CuentaJpaRepository cuentaJpaRepository;
     private final ClienteEntityMapper mapper;
 
-    public ClienteRepositoryAdapter(ClienteJpaRepository jpaRepository, ClienteEntityMapper mapper) {
+    public ClienteRepositoryAdapter(ClienteJpaRepository jpaRepository,
+                                    CuentaJpaRepository cuentaJpaRepository,
+                                    ClienteEntityMapper mapper) {
         this.jpaRepository = jpaRepository;
+        this.cuentaJpaRepository = cuentaJpaRepository;
         this.mapper = mapper;
     }
 
     @Override
     public Cliente guardar(Cliente cliente) {
-        var entityGuardada = jpaRepository.save(mapper.aEntity(cliente));
-        return mapper.aDominio(entityGuardada);
+        return mapper.aDominio(jpaRepository.save(mapper.aEntity(cliente)));
     }
 
     @Override
@@ -52,9 +55,6 @@ public class ClienteRepositoryAdapter implements ClienteRepositoryPort {
 
     @Override
     public boolean tieneCuentasVinculadas(Long clienteId) {
-        // Placeholder temporal: hasta que exista la tabla/entidad `cuentas` (Fase 7),
-        // devolvemos false para no romper la compilación del módulo Clientes.
-        // En la Fase 7 inyectaremos CuentaJpaRepository y consultaremos de verdad.
-        return false;
+        return cuentaJpaRepository.existsByClienteId(clienteId);
     }
 }
