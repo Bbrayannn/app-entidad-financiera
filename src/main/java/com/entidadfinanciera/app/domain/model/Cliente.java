@@ -7,7 +7,7 @@ import java.time.Period;
 public class Cliente {
 
     private Long id;
-    private String tipoIdentificacion;
+    private TipoIdentificacion tipoIdentificacion;
     private String numeroIdentificacion;
     private String nombres;
     private String apellido;
@@ -16,7 +16,7 @@ public class Cliente {
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaModificacion;
 
-    public Cliente(Long id, String tipoIdentificacion, String numeroIdentificacion,
+    public Cliente(Long id, TipoIdentificacion tipoIdentificacion, String numeroIdentificacion,
                    String nombres, String apellido, String correoElectronico,
                    LocalDate fechaNacimiento, LocalDateTime fechaCreacion,
                    LocalDateTime fechaModificacion) {
@@ -35,23 +35,31 @@ public class Cliente {
         return Period.between(fechaNacimiento, LocalDate.now()).getYears() >= 18;
     }
 
-    // Getters y setters (todos los campos)
+    // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public String getTipoIdentificacion() { return tipoIdentificacion; }
-    public void setTipoIdentificacion(String tipoIdentificacion) { this.tipoIdentificacion = tipoIdentificacion; }
+
+    public TipoIdentificacion getTipoIdentificacion() { return tipoIdentificacion; }
+    public void setTipoIdentificacion(TipoIdentificacion tipoIdentificacion) { this.tipoIdentificacion = tipoIdentificacion; }
+
     public String getNumeroIdentificacion() { return numeroIdentificacion; }
     public void setNumeroIdentificacion(String numeroIdentificacion) { this.numeroIdentificacion = numeroIdentificacion; }
+
     public String getNombres() { return nombres; }
     public void setNombres(String nombres) { this.nombres = nombres; }
+
     public String getApellido() { return apellido; }
     public void setApellido(String apellido) { this.apellido = apellido; }
+
     public String getCorreoElectronico() { return correoElectronico; }
     public void setCorreoElectronico(String correoElectronico) { this.correoElectronico = correoElectronico; }
+
     public LocalDate getFechaNacimiento() { return fechaNacimiento; }
     public void setFechaNacimiento(LocalDate fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
+
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+
     public LocalDateTime getFechaModificacion() { return fechaModificacion; }
     public void setFechaModificacion(LocalDateTime fechaModificacion) { this.fechaModificacion = fechaModificacion; }
 }

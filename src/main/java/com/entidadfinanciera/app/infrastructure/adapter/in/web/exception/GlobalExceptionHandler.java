@@ -82,6 +82,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDTO> manejarJsonInvalido(
+            org.springframework.http.converter.HttpMessageNotReadableException ex,
+            HttpServletRequest request) {
+        ErrorResponseDTO body = new ErrorResponseDTO(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "El cuerpo de la petición contiene datos inválidos o mal formados (revise tipos de dato como tipoIdentificacion, tipoCuenta, etc.)",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
     private ResponseEntity<ErrorResponseDTO> construirRespuesta(HttpStatus status, RuntimeException ex,
                                                                 HttpServletRequest request) {
         ErrorResponseDTO body = new ErrorResponseDTO(

@@ -1,14 +1,16 @@
 package com.entidadfinanciera.app.infrastructure.adapter.in.web.dto;
 
+import com.entidadfinanciera.app.domain.model.TipoIdentificacion;
 import jakarta.validation.constraints.*;
 
 import java.time.LocalDate;
 
 public record ClienteRequestDTO(
-        @NotBlank(message = "El tipo de identificación es obligatorio")
-        String tipoIdentificacion,
+        @NotNull(message = "El tipo de identificación es obligatorio")
+        TipoIdentificacion tipoIdentificacion,
 
         @NotBlank(message = "El número de identificación es obligatorio")
+        @Pattern(regexp = "^[0-9]{5,15}$", message = "El número de identificación debe tener entre 5 y 15 dígitos numéricos")
         String numeroIdentificacion,
 
         @NotBlank(message = "El nombre es obligatorio")
