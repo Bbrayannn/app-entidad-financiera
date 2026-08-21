@@ -1,10 +1,14 @@
 package com.entidadfinanciera.app.infrastructure.adapter.out.persistence;
 
 import com.entidadfinanciera.app.application.port.out.CuentaRepositoryPort;
+import com.entidadfinanciera.app.domain.exception.CuentaNoEncontradaException;
 import com.entidadfinanciera.app.domain.model.Cuenta;
+import com.entidadfinanciera.app.infrastructure.adapter.out.persistence.entity.CuentaEntity;
 import com.entidadfinanciera.app.infrastructure.adapter.out.persistence.mapper.CuentaEntityMapper;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,5 +51,16 @@ public class CuentaRepositoryAdapter implements CuentaRepositoryPort {
     @Override
     public void eliminar(Long id) {
         jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public void actualizarSaldo(Long cuentaId, BigDecimal nuevoSaldo, LocalDateTime fechaModificacion) {
+        CuentaEntity entity = jpaRepository.findById(cuentaId)
+                .orElseThrow(() -> new CuentaNoEncontradaException("Cuenta no encontrada al actualizar saldo: " + cuentaId));
+
+        entity.setSaldo(nuevoSaldo);
+        entity.setFechaModificacion(fechaModificacion);
+
+        jpaRepository.save(entity);
     }
 }
