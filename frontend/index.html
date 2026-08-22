@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Entidad Financiera - Panel básico</title>
+    <style>
+        body { font-family: sans-serif; max-width: 700px; margin: 40px auto; }
+        input, select, button { padding: 6px; margin: 4px 0; display: block; width: 100%; }
+        button { cursor: pointer; background: #2563eb; color: white; border: none; border-radius: 4px; padding: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        td, th { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        #error { color: red; }
+    </style>
+</head>
+<body>
+<h1>Clientes - Entidad Financiera</h1>
+
+<h3>Crear cliente</h3>
+<select id="tipoIdentificacion">
+    <option value="CC">CC</option><option value="CE">CE</option>
+    <option value="TI">TI</option><option value="PASAPORTE">Pasaporte</option>
+</select>
+<input id="numeroIdentificacion" placeholder="Número de identificación">
+<input id="nombres" placeholder="Nombres">
+<input id="apellido" placeholder="Apellido">
+<input id="correoElectronico" placeholder="Correo electrónico">
+<input id="fechaNacimiento" type="date">
+<button onclick="crearCliente()">Crear cliente</button>
+<p id="error"></p>
+
+<h3>Clientes registrados</h3>
+<table id="tablaClientes">
+    <thead><tr><th>ID</th><th>Nombres</th><th>Correo</th><th>Fecha creación</th></tr></thead>
+    <tbody></tbody>
+</table>
+
+<script>
+    const API = "http://localhost:8080/api/clientes";
+
+    async function crearCliente() {
+        document.getElementById("error").textContent = "";
+        const body = {
+            tipoIdentificacion: document.getElementById("tipoIdentificacion").value,
+            numeroIdentificacion: document.getElementById("numeroIdentificacion").value,
+            nombres: document.getElementById("nombres").value,
+            apellido: document.getElementById("apellido").value,
+            correoElectronico: document.getElementById("correoElectronico").value,
+            fechaNacimiento: document.getElementById("fechaNacimiento").value
+        };
+        try {
+            const res = await fetch(API, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.mensaje || "Error al crear cliente");
+            }
+            await cargarClientes();
+        } catch (e) {
+            document.getElementById("error").textContent = e.message;
+        }
+    }
+
+    async function cargarClientes() {
+        const res = await fetch(API);
+        const clientes = await res.json();
+        const tbody = document.querySelector("#tablaClientes tbody");
+        tbody.innerHTML = "";
+        clientes.forEach(c => {
+            const fila = document.createElement("tr");
+            fila.innerHTML = `<td>${c.id}</td><td>${c.nombres} ${c.apellido}</td><td>${c.correoElectronico}</td><td>${c.fechaCreacion ?? ""}</td>`;
+            tbody.appendChild(fila);
+        });
+    }
+
+    cargarClientes();
+</script>
+</body>
+</html>
