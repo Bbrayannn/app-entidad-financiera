@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Adaptador de entrada REST para la gestión de clientes.
+ * Expone los endpoints HTTP para la creación y consulta de clientes.
+ */
+
 @RestController
 @RequestMapping("/api/clientes")
 @Tag(name = "Clientes", description = "Gestión de clientes de la entidad financiera")

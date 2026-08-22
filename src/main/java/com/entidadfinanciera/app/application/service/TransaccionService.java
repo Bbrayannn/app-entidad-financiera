@@ -12,6 +12,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Servicio encargado de orquestar las operaciones financieras (consignaciones, retiros, transferencias).
+ * Garantiza el cumplimiento de las propiedades ACID mediante transacciones de Spring.
+ */
+
 @Service
 public class TransaccionService implements RealizarConsignacionUseCase, RealizarRetiroUseCase,
         RealizarTransferenciaUseCase, ConsultarTransaccionUseCase {
@@ -24,6 +29,7 @@ public class TransaccionService implements RealizarConsignacionUseCase, Realizar
         this.transaccionRepositoryPort = transaccionRepositoryPort;
         this.cuentaRepositoryPort = cuentaRepositoryPort;
     }
+
 
     @Override
     @Transactional
@@ -68,6 +74,14 @@ public class TransaccionService implements RealizarConsignacionUseCase, Realizar
 
         return guardada;
     }
+
+    /**
+     * Ejecuta una transferencia de fondos entre dos cuentas registradas.
+     * Ambas actualizaciones de saldo ocurren dentro de la misma transacción @Transactional.
+     * Si la segunda falla, Spring revierte automáticamente todo (insert de transacción y movimientos).
+     *
+     * @throws SaldoInsuficienteException si la cuenta de origen no tiene fondos suficientes
+     */
 
     @Override
     @Transactional

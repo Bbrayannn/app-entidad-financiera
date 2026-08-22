@@ -3,6 +3,10 @@ package com.entidadfinanciera.app.domain.model;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * Entidad de dominio que representa una cuenta bancaria (Ahorros o Corriente).
+ * Encapsula el saldo y la lógica de validación de estados y transiciones.
+ */
 public class Cuenta {
 
     private Long id;
@@ -29,6 +33,11 @@ public class Cuenta {
         this.clienteId = clienteId;
     }
 
+    /**
+     * Valida si la cuenta permite realizar retiros o transferencias según su estado actual.
+     *
+     * @return true si la cuenta está en estado ACTIVA
+     */
     public boolean puedeCancelarse() {
         return saldo.compareTo(BigDecimal.ZERO) == 0;
     }
@@ -36,6 +45,13 @@ public class Cuenta {
     public boolean esAhorros() {
         return tipoCuenta == TipoCuenta.AHORROS;
     }
+
+    /**
+     * Verifica si la cuenta puede cambiar al nuevo estado solicitado.
+     *
+     * @param nuevoEstado Estado al que se desea transicionar
+     * @return true si la transición de estado es válida
+     */
 
     public boolean puedeTransicionarA(EstadoCuenta nuevoEstado) {
         if (this.estado == EstadoCuenta.CANCELADA) {

@@ -17,7 +17,7 @@ public class CuentaEntity {
     @Enumerated(EnumType.STRING)
     private com.entidadfinanciera.app.domain.model.TipoCuenta tipoCuenta;
 
-    @Column(name = "numero_cuenta", nullable = false, length = 10)
+    @Column(name = "numero_cuenta", nullable = false, length = 10, columnDefinition = "bpchar")
     private String numeroCuenta;
 
     @Enumerated(EnumType.STRING)

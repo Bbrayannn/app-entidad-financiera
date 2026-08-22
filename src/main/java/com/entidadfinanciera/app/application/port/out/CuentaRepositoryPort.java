@@ -7,6 +7,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Puerto de salida: contrato de persistencia para Cuenta, implementado por el adaptador JPA.
+ */
+
 public interface CuentaRepositoryPort {
     Cuenta guardar(Cuenta cuenta);
     Optional<Cuenta> buscarPorId(Long id);

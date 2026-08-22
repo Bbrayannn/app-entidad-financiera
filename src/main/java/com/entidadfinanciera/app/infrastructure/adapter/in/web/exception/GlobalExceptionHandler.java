@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
 
+/**
+ * Controlador global de excepciones para mapear errores de dominio y de infraestructura
+ * a respuestas HTTP estandarizadas (ProblemDetail / JSON) con sus respectivos códigos de estado (400, 404, 409, 500).
+ */
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

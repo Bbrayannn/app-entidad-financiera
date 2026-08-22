@@ -18,6 +18,11 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Orquesta los casos de uso del módulo Cuentas: creación con generación automática
+ * de número de cuenta y validación de transiciones de estado.
+ */
+
 @Service
 public class CuentaService implements CrearCuentaUseCase, CambiarEstadoCuentaUseCase,
         ConsultarCuentaUseCase, EliminarCuentaUseCase {
@@ -59,6 +64,14 @@ public class CuentaService implements CrearCuentaUseCase, CambiarEstadoCuentaUse
 
         return cuentaRepositoryPort.guardar(cuenta);
     }
+
+    /**
+     * Genera un número de cuenta único de 10 dígitos con el prefijo correspondiente
+     * al tipo de cuenta (33 = corriente, 53 = ahorros).
+     * Usa SecureRandom para garantizar aleatoriedad y reintento en caso de colisión.
+     *
+     * @throws GeneracionNumeroCuentaException si tras varios intentos no se logra un número único
+     */
 
     private String generarNumeroCuentaUnico(TipoCuenta tipoCuenta) {
         for (int intento = 0; intento < MAX_INTENTOS_GENERACION; intento++) {
