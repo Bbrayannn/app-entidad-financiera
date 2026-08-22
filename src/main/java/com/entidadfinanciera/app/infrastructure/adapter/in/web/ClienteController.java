@@ -20,8 +20,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/clientes")
+@CrossOrigin(origins = "*") // <--- AGREGAR ESTA LÍNEA
 @Tag(name = "Clientes", description = "Gestión de clientes de la entidad financiera")
-public class ClienteController {
+public class ClienteController{
 
     private final CrearClienteUseCase crearClienteUseCase;
     private final ActualizarClienteUseCase actualizarClienteUseCase;
