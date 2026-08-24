@@ -1,5 +1,7 @@
 package com.entidadfinanciera.app.infrastructure.adapter.out.persistence.entity;
 
+import com.entidadfinanciera.app.domain.model.EstadoCuenta;
+import com.entidadfinanciera.app.domain.model.TipoCuenta;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -15,14 +17,14 @@ public class CuentaEntity {
 
     @Column(name = "tipo_cuenta", nullable = false)
     @Enumerated(EnumType.STRING)
-    private com.entidadfinanciera.app.domain.model.TipoCuenta tipoCuenta;
+    private TipoCuenta tipoCuenta;
 
-    @Column(name = "numero_cuenta", nullable = false, length = 10, columnDefinition = "bpchar")
+    @Column(name = "numero_cuenta", nullable = false, unique = true)
     private String numeroCuenta;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private com.entidadfinanciera.app.domain.model.EstadoCuenta estado;
+    private EstadoCuenta estado;
 
     @Column(nullable = false)
     private BigDecimal saldo;
@@ -39,12 +41,15 @@ public class CuentaEntity {
     @Column(name = "cliente_id", nullable = false)
     private Long clienteId;
 
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
     protected CuentaEntity() {}
 
-    public CuentaEntity(Long id, com.entidadfinanciera.app.domain.model.TipoCuenta tipoCuenta, String numeroCuenta,
-                        com.entidadfinanciera.app.domain.model.EstadoCuenta estado, BigDecimal saldo,
-                        boolean exentaGmf, LocalDateTime fechaCreacion, LocalDateTime fechaModificacion,
-                        Long clienteId) {
+    public CuentaEntity(Long id, TipoCuenta tipoCuenta, String numeroCuenta, EstadoCuenta estado,
+                        BigDecimal saldo, boolean exentaGmf, LocalDateTime fechaCreacion,
+                        LocalDateTime fechaModificacion, Long clienteId, Long version) {
         this.id = id;
         this.tipoCuenta = tipoCuenta;
         this.numeroCuenta = numeroCuenta;
@@ -54,16 +59,17 @@ public class CuentaEntity {
         this.fechaCreacion = fechaCreacion;
         this.fechaModificacion = fechaModificacion;
         this.clienteId = clienteId;
+        this.version = version;
     }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public com.entidadfinanciera.app.domain.model.TipoCuenta getTipoCuenta() { return tipoCuenta; }
-    public void setTipoCuenta(com.entidadfinanciera.app.domain.model.TipoCuenta tipoCuenta) { this.tipoCuenta = tipoCuenta; }
+    public TipoCuenta getTipoCuenta() { return tipoCuenta; }
+    public void setTipoCuenta(TipoCuenta tipoCuenta) { this.tipoCuenta = tipoCuenta; }
     public String getNumeroCuenta() { return numeroCuenta; }
     public void setNumeroCuenta(String numeroCuenta) { this.numeroCuenta = numeroCuenta; }
-    public com.entidadfinanciera.app.domain.model.EstadoCuenta getEstado() { return estado; }
-    public void setEstado(com.entidadfinanciera.app.domain.model.EstadoCuenta estado) { this.estado = estado; }
+    public EstadoCuenta getEstado() { return estado; }
+    public void setEstado(EstadoCuenta estado) { this.estado = estado; }
     public BigDecimal getSaldo() { return saldo; }
     public void setSaldo(BigDecimal saldo) { this.saldo = saldo; }
     public boolean isExentaGmf() { return exentaGmf; }
@@ -74,4 +80,6 @@ public class CuentaEntity {
     public void setFechaModificacion(LocalDateTime fechaModificacion) { this.fechaModificacion = fechaModificacion; }
     public Long getClienteId() { return clienteId; }
     public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
+    public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
 }

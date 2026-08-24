@@ -1,10 +1,10 @@
 package com.entidadfinanciera.app.application.port.in;
 
 import com.entidadfinanciera.app.domain.model.Cliente;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface ConsultarClienteUseCase {
     Cliente buscarPorId(Long id);
-    List<Cliente> listarTodos();
+    Page<Cliente> listarTodos(Pageable pageable);
 }

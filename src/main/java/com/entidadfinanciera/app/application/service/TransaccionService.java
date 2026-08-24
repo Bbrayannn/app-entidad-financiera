@@ -13,8 +13,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Servicio encargado de orquestar las operaciones financieras (consignaciones, retiros, transferencias).
- * Garantiza el cumplimiento de las propiedades ACID mediante transacciones de Spring.
+ * Ejecuta consignaciones, retiros y transferencias. Es el módulo más sensible del
+ * proyecto porque toca dinero directamente, así que cada método valida monto y estado
+ * de la cuenta antes de mover dinero.
  */
 
 @Service
@@ -62,6 +63,8 @@ public class TransaccionService implements RealizarConsignacionUseCase, Realizar
         }
 
         BigDecimal nuevoSaldo = cuenta.getSaldo().subtract(monto);
+        // Revalido aquí aunque ya comprobé saldo suficiente arriba: en corriente el saldo
+        // sí puede quedar negativo (sobregiro), así que esta regla solo aplica a ahorros.
         cuenta.validarSaldoParaTipo(nuevoSaldo);
 
         Transaccion transaccion = new Transaccion(null, TipoTransaccion.RETIRO, monto,
@@ -76,11 +79,10 @@ public class TransaccionService implements RealizarConsignacionUseCase, Realizar
     }
 
     /**
-     * Ejecuta una transferencia de fondos entre dos cuentas registradas.
-     * Ambas actualizaciones de saldo ocurren dentro de la misma transacción @Transactional.
-     * Si la segunda falla, Spring revierte automáticamente todo (insert de transacción y movimientos).
-     *
-     * @throws SaldoInsuficienteException si la cuenta de origen no tiene fondos suficientes
+     * Genera un movimiento débito en origen y uno crédito en destino, dentro de la
+     * misma transacción @Transactional. Si el segundo actualizarSaldo falla por
+     * cualquier motivo, Spring revierte automáticamente todo lo anterior (incluido
+     * el débito ya aplicado en origen) así nunca queda dinero perdido a mitad de camino.
      */
 
     @Override
@@ -121,6 +123,8 @@ public class TransaccionService implements RealizarConsignacionUseCase, Realizar
         return guardada;
     }
 
+    /** Ninguna operación puede ejecutarse sobre una cuenta que no esté ACTIVA. */
+
     private Cuenta obtenerCuentaActiva(Long cuentaId) {
         Cuenta cuenta = cuentaRepositoryPort.buscarPorId(cuentaId)
                 .orElseThrow(() -> new CuentaNoEncontradaException("Cuenta no encontrada con id " + cuentaId));
@@ -143,6 +147,8 @@ public class TransaccionService implements RealizarConsignacionUseCase, Realizar
         return transaccionRepositoryPort.buscarPorId(id)
                 .orElseThrow(() -> new RuntimeException("Transacción no encontrada con id " + id));
     }
+
+    /** Este es el listado que uso para el "estado de cuenta" que pide el PDF. */
 
     @Override
     public List<Transaccion> listarPorCuenta(Long cuentaId) {

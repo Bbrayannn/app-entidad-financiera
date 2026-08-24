@@ -3,9 +3,10 @@ package com.entidadfinanciera.app.infrastructure.adapter.out.persistence;
 import com.entidadfinanciera.app.application.port.out.ClienteRepositoryPort;
 import com.entidadfinanciera.app.domain.model.Cliente;
 import com.entidadfinanciera.app.infrastructure.adapter.out.persistence.mapper.ClienteEntityMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -34,8 +35,8 @@ public class ClienteRepositoryAdapter implements ClienteRepositoryPort {
     }
 
     @Override
-    public List<Cliente> listarTodos() {
-        return jpaRepository.findAll().stream().map(mapper::aDominio).toList();
+    public Page<Cliente> listarTodos(Pageable pageable) {
+        return jpaRepository.findAll(pageable).map(mapper::aDominio);
     }
 
     @Override

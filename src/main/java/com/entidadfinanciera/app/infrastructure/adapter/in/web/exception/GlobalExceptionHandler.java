@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Controlador global de excepciones para mapear errores de dominio y de infraestructura
- * a respuestas HTTP estandarizadas (ProblemDetail / JSON) con sus respectivos códigos de estado (400, 404, 409, 500).
+ * a respuestas HTTP estandarizadas  con sus respectivos códigos de estado (400, 404, 409, 500).
  */
 
 @RestControllerAdvice
@@ -36,8 +36,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDTO> manejarNotFound(RuntimeException ex, HttpServletRequest request) {
         return construirRespuesta(HttpStatus.NOT_FOUND, ex, request);
     }
-
-    // ---- 409 Conflict ----
     @ExceptionHandler({
             ClienteConProductosVinculadosException.class,
             ClienteDuplicadoException.class,
@@ -45,12 +43,19 @@ public class GlobalExceptionHandler {
             SaldoInvalidoParaCancelarException.class,
             SaldoNegativoNoPermitidoException.class,
             CuentaInactivaException.class,
-            TransicionEstadoInvalidaException.class
+            TransicionEstadoInvalidaException.class,
+            ConcurrenciaSaldoException.class
     })
     public ResponseEntity<ErrorResponseDTO> manejarConflict(RuntimeException ex, HttpServletRequest request) {
         return construirRespuesta(HttpStatus.CONFLICT, ex, request);
     }
 
+
+    /**
+     * Bean Validation no se detiene en el primer campo inválido: acumula todos los
+     * errores encontrados, y aquí los devuelvo en "detalles" para que el frontend
+     * pueda marcar cada input específico en vez de mostrar un mensaje genérico.
+     */
     // ---- 400 Bad Request: validaciones de @Valid en DTOs ----
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDTO> manejarValidacion(MethodArgumentNotValidException ex,

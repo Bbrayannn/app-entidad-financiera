@@ -3,17 +3,17 @@ package com.entidadfinanciera.app.infrastructure.adapter.in.web;
 import com.entidadfinanciera.app.application.port.in.CambiarEstadoCuentaUseCase;
 import com.entidadfinanciera.app.application.port.in.ConsultarCuentaUseCase;
 import com.entidadfinanciera.app.application.port.in.CrearCuentaUseCase;
-import com.entidadfinanciera.app.application.port.in.EliminarCuentaUseCase;
 import com.entidadfinanciera.app.infrastructure.adapter.in.web.dto.CambiarEstadoRequestDTO;
 import com.entidadfinanciera.app.infrastructure.adapter.in.web.dto.CuentaRequestDTO;
 import com.entidadfinanciera.app.infrastructure.adapter.in.web.dto.CuentaResponseDTO;
 import com.entidadfinanciera.app.infrastructure.adapter.in.web.mapper.CuentaWebMapper;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/cuentas")
@@ -22,18 +22,15 @@ public class CuentaController {
     private final CrearCuentaUseCase crearCuentaUseCase;
     private final CambiarEstadoCuentaUseCase cambiarEstadoCuentaUseCase;
     private final ConsultarCuentaUseCase consultarCuentaUseCase;
-    private final EliminarCuentaUseCase eliminarCuentaUseCase;
     private final CuentaWebMapper mapper;
 
     public CuentaController(CrearCuentaUseCase crearCuentaUseCase,
                             CambiarEstadoCuentaUseCase cambiarEstadoCuentaUseCase,
                             ConsultarCuentaUseCase consultarCuentaUseCase,
-                            EliminarCuentaUseCase eliminarCuentaUseCase,
                             CuentaWebMapper mapper) {
         this.crearCuentaUseCase = crearCuentaUseCase;
         this.cambiarEstadoCuentaUseCase = cambiarEstadoCuentaUseCase;
         this.consultarCuentaUseCase = consultarCuentaUseCase;
-        this.eliminarCuentaUseCase = eliminarCuentaUseCase;
         this.mapper = mapper;
     }
 
@@ -49,10 +46,12 @@ public class CuentaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CuentaResponseDTO>> listarPorCliente(@RequestParam Long clienteId) {
-        var cuentas = consultarCuentaUseCase.listarPorCliente(clienteId).stream()
-                .map(mapper::aResponseDTO).toList();
-        return ResponseEntity.ok(cuentas);
+    public ResponseEntity<Page<CuentaResponseDTO>> listarPorCliente(
+            @RequestParam Long clienteId,
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        Page<CuentaResponseDTO> pagina = consultarCuentaUseCase.listarPorCliente(clienteId, pageable)
+                .map(mapper::aResponseDTO);
+        return ResponseEntity.ok(pagina);
     }
 
     @PatchMapping("/{id}/estado")
@@ -60,11 +59,5 @@ public class CuentaController {
                                                            @Valid @RequestBody CambiarEstadoRequestDTO request) {
         var actualizada = cambiarEstadoCuentaUseCase.cambiarEstado(id, request.nuevoEstado());
         return ResponseEntity.ok(mapper.aResponseDTO(actualizada));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        eliminarCuentaUseCase.eliminar(id);
-        return ResponseEntity.noContent().build();
     }
 }

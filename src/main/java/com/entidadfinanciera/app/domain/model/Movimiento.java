@@ -13,6 +13,13 @@ public class Movimiento {
     private BigDecimal saldoResultante;
     private LocalDateTime fechaCreacion;
 
+    /**
+     * Afectación individual a una cuenta dentro de una transacción (débito o crédito).
+     * Guardo saldoResultante (el saldo justo después de aplicar este movimiento) para
+     * poder reconstruir el estado de cuenta histórico sin tener que recalcular sumando
+     * todos los movimientos anteriores cada vez que alguien lo consulta.
+     */
+
     public Movimiento(Long id, Long transaccionId, Long cuentaId, TipoMovimiento tipoMovimiento,
                       BigDecimal monto, BigDecimal saldoResultante, LocalDateTime fechaCreacion) {
         this.id = id;
