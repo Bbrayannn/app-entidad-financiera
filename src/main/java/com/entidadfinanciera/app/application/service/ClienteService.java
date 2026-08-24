@@ -4,14 +4,22 @@ import com.entidadfinanciera.app.application.port.in.ActualizarClienteUseCase;
 import com.entidadfinanciera.app.application.port.in.ConsultarClienteUseCase;
 import com.entidadfinanciera.app.application.port.in.CrearClienteUseCase;
 import com.entidadfinanciera.app.application.port.in.EliminarClienteUseCase;
-// IMPORTANTE: Asegúrate de tener este import
 import com.entidadfinanciera.app.application.port.out.ClienteRepositoryPort;
 import com.entidadfinanciera.app.domain.exception.*;
 import com.entidadfinanciera.app.domain.model.Cliente;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
-import java.util.List;
+
+
+/**
+ * Orquesta los casos de uso del módulo Clientes. Depende únicamente de la interfaz
+ * ClienteRepositoryPort, nunca de JPA directamente  así puedo testear toda la lógica
+ * de negocio con un mock, sin levantar base de datos (ver ClienteServiceTest).
+ */
 
 @Service
 public class ClienteService implements CrearClienteUseCase, ActualizarClienteUseCase,
@@ -23,6 +31,12 @@ public class ClienteService implements CrearClienteUseCase, ActualizarClienteUse
         this.clienteRepositoryPort = clienteRepositoryPort;
     }
 
+    /**
+     * Valida mayoría de edad y unica de identificación/correo antes de guardar.
+     * Verifico duplicados aquí, a nivel de aplicación, y también con UNIQUE en el DDL:
+     * la doble capa evita condiciones de carrera si dos registros con el mismo dato
+     * llegan casi al mismo tiempo .
+     */
     @Override
     @Transactional
     public Cliente crear(Cliente cliente) {
@@ -43,6 +57,8 @@ public class ClienteService implements CrearClienteUseCase, ActualizarClienteUse
         return clienteRepositoryPort.guardar(cliente);
     }
 
+    /** Recalcula fechaModificacion en cada actualización, tal como lo exige el PDF. */
+
     @Override
     @Transactional
     public Cliente actualizar(Long id, Cliente datosActualizados) {
@@ -56,6 +72,13 @@ public class ClienteService implements CrearClienteUseCase, ActualizarClienteUse
 
         return clienteRepositoryPort.guardar(clienteExistente);
     }
+
+    /**
+     * Un cliente con cuentas asociadas no puede eliminarse (regla explícita del PDF).
+     * Consulto primero que exista, y luego que no tenga cuentas, en ese orden,
+     * para poder distinguir 404 (no existe) de 409 (existe pero no se puede borrar).
+     */
+
 
     @Override
     @Transactional
@@ -76,8 +99,10 @@ public class ClienteService implements CrearClienteUseCase, ActualizarClienteUse
                 .orElseThrow(() -> new ClienteNoEncontradoException("Cliente no encontrado con id " + id));
     }
 
+    /** Pagino el listado en vez de devolver todo de una vez, pensando en cuando la tabla crezca. */
+
     @Override
-    public List<Cliente> listarTodos() {
-        return clienteRepositoryPort.listarTodos();
+    public Page<Cliente> listarTodos(Pageable pageable) {
+        return clienteRepositoryPort.listarTodos(pageable);
     }
 }

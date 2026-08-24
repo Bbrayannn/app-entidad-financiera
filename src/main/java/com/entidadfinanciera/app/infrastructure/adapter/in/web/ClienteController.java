@@ -7,11 +7,12 @@ import com.entidadfinanciera.app.infrastructure.adapter.in.web.mapper.ClienteWeb
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * Adaptador de entrada REST para la gestión de clientes.
@@ -20,9 +21,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/clientes")
-@CrossOrigin(origins = "*") // <--- AGREGAR ESTA LÍNEA
+@CrossOrigin(origins = "*")
 @Tag(name = "Clientes", description = "Gestión de clientes de la entidad financiera")
-public class ClienteController{
+public class ClienteController {
 
     private final CrearClienteUseCase crearClienteUseCase;
     private final ActualizarClienteUseCase actualizarClienteUseCase;
@@ -56,13 +57,13 @@ public class ClienteController{
         return ResponseEntity.ok(mapper.aResponseDTO(cliente));
     }
 
-    @Operation(summary = "Listar todos los clientes", description = "Obtiene la lista completa de clientes registrados en el sistema.")
+    @Operation(summary = "Listar todos los clientes paginados", description = "Obtiene la lista de clientes registrados soportando paginación y ordenamiento.")
     @GetMapping
-    public ResponseEntity<List<ClienteResponseDTO>> listar() {
-        var clientes = consultarClienteUseCase.listarTodos().stream()
-                .map(mapper::aResponseDTO)
-                .toList();
-        return ResponseEntity.ok(clientes);
+    public ResponseEntity<Page<ClienteResponseDTO>> listar(
+            @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        Page<ClienteResponseDTO> pagina = consultarClienteUseCase.listarTodos(pageable)
+                .map(mapper::aResponseDTO);
+        return ResponseEntity.ok(pagina);
     }
 
     @Operation(summary = "Actualizar cliente", description = "Actualiza los datos de un cliente existente por su ID.")

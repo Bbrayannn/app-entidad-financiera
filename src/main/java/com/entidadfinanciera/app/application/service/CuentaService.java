@@ -3,29 +3,29 @@ package com.entidadfinanciera.app.application.service;
 import com.entidadfinanciera.app.application.port.in.CambiarEstadoCuentaUseCase;
 import com.entidadfinanciera.app.application.port.in.ConsultarCuentaUseCase;
 import com.entidadfinanciera.app.application.port.in.CrearCuentaUseCase;
-import com.entidadfinanciera.app.application.port.in.EliminarCuentaUseCase;
 import com.entidadfinanciera.app.application.port.out.ClienteRepositoryPort;
 import com.entidadfinanciera.app.application.port.out.CuentaRepositoryPort;
 import com.entidadfinanciera.app.domain.exception.*;
 import com.entidadfinanciera.app.domain.model.Cuenta;
 import com.entidadfinanciera.app.domain.model.EstadoCuenta;
 import com.entidadfinanciera.app.domain.model.TipoCuenta;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * Orquesta los casos de uso del módulo Cuentas: creación con generación automática
- * de número de cuenta y validación de transiciones de estado.
+ * Orquesta creación de cuentas (con generación de número único) y cambios de estado.
+ * No expone actualizar/eliminar genéricos porque el PDF solo permite cambiar el estado
+ * de una cuenta, nunca editarla libremente ni borrarla.
  */
 
 @Service
-public class CuentaService implements CrearCuentaUseCase, CambiarEstadoCuentaUseCase,
-        ConsultarCuentaUseCase, EliminarCuentaUseCase {
+public class CuentaService implements CrearCuentaUseCase, CambiarEstadoCuentaUseCase, ConsultarCuentaUseCase {
 
     private static final int LONGITUD_NUMERO_CUENTA = 10;
     private static final int MAX_INTENTOS_GENERACION = 10;
@@ -39,6 +39,8 @@ public class CuentaService implements CrearCuentaUseCase, CambiarEstadoCuentaUse
         this.clienteRepositoryPort = clienteRepositoryPort;
     }
 
+    /** Toda cuenta se crea activa con saldo $0, vinculada a un cliente que debe existir. */
+
     @Override
     @Transactional
     public Cuenta crear(Long clienteId, TipoCuenta tipoCuenta, boolean exentaGmf) {
@@ -47,9 +49,6 @@ public class CuentaService implements CrearCuentaUseCase, CambiarEstadoCuentaUse
 
         String numeroCuenta = generarNumeroCuentaUnico(tipoCuenta);
 
-        // Regla del PDF: cuenta de ahorros se crea ACTIVA por defecto.
-        // Aplicamos el mismo criterio por consistencia a cuenta corriente,
-        // ya que el PDF no indica lo contrario.
         Cuenta cuenta = new Cuenta(
                 null,
                 tipoCuenta,
@@ -59,20 +58,19 @@ public class CuentaService implements CrearCuentaUseCase, CambiarEstadoCuentaUse
                 exentaGmf,
                 LocalDateTime.now(),
                 null,
-                clienteId
+                clienteId,
+                null // version: Hibernate la asigna al insertar por primera vez
         );
 
         return cuentaRepositoryPort.guardar(cuenta);
     }
 
-    /**
-     * Genera un número de cuenta único de 10 dígitos con el prefijo correspondiente
-     * al tipo de cuenta (33 = corriente, 53 = ahorros).
-     * Usa SecureRandom para garantizar aleatoriedad y reintento en caso de colisión.
-     *
-     * @throws GeneracionNumeroCuentaException si tras varios intentos no se logra un número único
-     */
 
+    /**
+     * Genera un número de 10 dígitos con el numero dependiendo del tipo de cuenta (33/53) y reintenta
+     * si choca con uno existente. Con 8 dígitos aleatorios la colisión es muy poco probable por que son aleatorios,
+     * pero no imposible, así que el reintento cubre ese caso en vez de ignorarlo.
+     */
     private String generarNumeroCuentaUnico(TipoCuenta tipoCuenta) {
         for (int intento = 0; intento < MAX_INTENTOS_GENERACION; intento++) {
             String candidato = generarCandidato(tipoCuenta);
@@ -93,6 +91,12 @@ public class CuentaService implements CrearCuentaUseCase, CambiarEstadoCuentaUse
         }
         return sb.toString();
     }
+
+
+    /**
+     * Valida que la transición sea permitida (ver Cuenta.puedeTransicionarA) y, si el
+     * destino es cancelada, que el saldo esté en $0 antes de aplicar el cambio.
+     */
 
     @Override
     @Transactional
@@ -122,23 +126,7 @@ public class CuentaService implements CrearCuentaUseCase, CambiarEstadoCuentaUse
     }
 
     @Override
-    public List<Cuenta> listarPorCliente(Long clienteId) {
-        return cuentaRepositoryPort.listarPorCliente(clienteId);
+    public Page<Cuenta> listarPorCliente(Long clienteId, Pageable pageable) {
+        return cuentaRepositoryPort.listarPorCliente(clienteId, pageable);
     }
-
-    @Override
-    @Transactional
-    public void eliminar(Long id) {
-        Cuenta cuenta = cuentaRepositoryPort.buscarPorId(id)
-                .orElseThrow(() -> new CuentaNoEncontradaException("Cuenta no encontrada con id " + id));
-
-        if (cuenta.getEstado() != EstadoCuenta.CANCELADA) {
-            throw new CuentaNoCanceladaException(
-                    "Solo se pueden eliminar cuentas en estado CANCELADA. Estado actual: " + cuenta.getEstado());
-        }
-
-        cuentaRepositoryPort.eliminar(id);
-    }
-
-
 }

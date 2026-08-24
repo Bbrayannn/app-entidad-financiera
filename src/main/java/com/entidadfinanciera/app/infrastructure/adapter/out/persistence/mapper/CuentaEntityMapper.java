@@ -11,7 +11,8 @@ public class CuentaEntityMapper {
         return new CuentaEntity(
                 cuenta.getId(), cuenta.getTipoCuenta(), cuenta.getNumeroCuenta(),
                 cuenta.getEstado(), cuenta.getSaldo(), cuenta.isExentaGmf(),
-                cuenta.getFechaCreacion(), cuenta.getFechaModificacion(), cuenta.getClienteId()
+                cuenta.getFechaCreacion(), cuenta.getFechaModificacion(),
+                cuenta.getClienteId(), cuenta.getVersion()
         );
     }
 
@@ -19,7 +20,8 @@ public class CuentaEntityMapper {
         return new Cuenta(
                 entity.getId(), entity.getTipoCuenta(), entity.getNumeroCuenta(),
                 entity.getEstado(), entity.getSaldo(), entity.isExentaGmf(),
-                entity.getFechaCreacion(), entity.getFechaModificacion(), entity.getClienteId()
+                entity.getFechaCreacion(), entity.getFechaModificacion(),
+                entity.getClienteId(), entity.getVersion()
         );
     }
 }
