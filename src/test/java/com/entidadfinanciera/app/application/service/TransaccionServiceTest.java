@@ -31,10 +31,9 @@ class TransaccionServiceTest {
 
     private Cuenta cuentaActiva(Long id, BigDecimal saldo) {
         return new Cuenta(id, TipoCuenta.AHORROS, "530000000" + id, EstadoCuenta.ACTIVA,
-                saldo, false, LocalDateTime.now(), null, 1L);
+                saldo, false, LocalDateTime.now(), null, 1L, 0L);
     }
 
-    // --- Caso exitoso: consignación ---
     @Test
     void consignar_conDatosValidos_debeAumentarSaldo() {
         Cuenta cuenta = cuentaActiva(1L, new BigDecimal("100000"));
@@ -46,7 +45,6 @@ class TransaccionServiceTest {
         verify(cuentaRepositoryPort).actualizarSaldo(eq(1L), eq(new BigDecimal("150000")), any());
     }
 
-    // --- Dato inválido: monto negativo o cero ---
     @Test
     void consignar_conMontoCero_debeLanzarExcepcion() {
         assertThatThrownBy(() -> transaccionService.consignar(1L, BigDecimal.ZERO, "Inválido"))
@@ -55,7 +53,6 @@ class TransaccionServiceTest {
         verifyNoInteractions(cuentaRepositoryPort);
     }
 
-    // --- Regla de negocio: retiro con saldo insuficiente ---
     @Test
     void retirar_conSaldoInsuficiente_debeLanzarExcepcion() {
         Cuenta cuenta = cuentaActiva(1L, new BigDecimal("10000"));
@@ -67,7 +64,6 @@ class TransaccionServiceTest {
         verify(cuentaRepositoryPort, never()).actualizarSaldo(any(), any(), any());
     }
 
-    // --- Caso límite: retiro deja el saldo exactamente en $0 ---
     @Test
     void retirar_montoIgualAlSaldo_debeDejarSaldoEnCero() {
         Cuenta cuenta = cuentaActiva(1L, new BigDecimal("50000"));
@@ -79,18 +75,16 @@ class TransaccionServiceTest {
         verify(cuentaRepositoryPort).actualizarSaldo(eq(1L), eq(BigDecimal.ZERO), any());
     }
 
-    // --- Regla de negocio: cuenta inactiva no permite operar ---
     @Test
     void consignar_enCuentaInactiva_debeLanzarExcepcion() {
         Cuenta cuenta = new Cuenta(1L, TipoCuenta.AHORROS, "5300000001", EstadoCuenta.INACTIVA,
-                BigDecimal.ZERO, false, LocalDateTime.now(), null, 1L);
+                BigDecimal.ZERO, false, LocalDateTime.now(), null, 1L, 0L);
         when(cuentaRepositoryPort.buscarPorId(1L)).thenReturn(Optional.of(cuenta));
 
         assertThatThrownBy(() -> transaccionService.consignar(1L, new BigDecimal("10000"), "Depósito"))
                 .isInstanceOf(CuentaInactivaException.class);
     }
 
-    // --- Caso exitoso: transferencia genera 2 movimientos y actualiza ambos saldos ---
     @Test
     void transferir_conDatosValidos_debeActualizarAmbasCuentas() {
         Cuenta origen = cuentaActiva(1L, new BigDecimal("100000"));
@@ -106,7 +100,6 @@ class TransaccionServiceTest {
         verify(cuentaRepositoryPort).actualizarSaldo(eq(2L), eq(new BigDecimal("50000")), any());
     }
 
-    // --- Regla de negocio: transferencia entre la misma cuenta ---
     @Test
     void transferir_entreLaMismaCuenta_debeLanzarExcepcion() {
         assertThatThrownBy(() -> transaccionService.transferir(1L, 1L, new BigDecimal("1000"), "Inválida"))
@@ -115,7 +108,6 @@ class TransaccionServiceTest {
         verifyNoInteractions(cuentaRepositoryPort);
     }
 
-    // --- Recurso inexistente: transferencia a cuenta destino que no existe ---
     @Test
     void transferir_conCuentaDestinoInexistente_debeLanzarExcepcionYNoAfectarOrigen() {
         Cuenta origen = cuentaActiva(1L, new BigDecimal("100000"));
@@ -125,8 +117,6 @@ class TransaccionServiceTest {
         assertThatThrownBy(() -> transaccionService.transferir(1L, 2L, new BigDecimal("30000"), "Pago"))
                 .isInstanceOf(CuentaNoEncontradaException.class);
 
-        // Verificación clave de atomicidad a nivel de unidad:
-        // si la cuenta destino no existe, NUNCA debe intentarse actualizar ningún saldo.
         verify(cuentaRepositoryPort, never()).actualizarSaldo(any(), any(), any());
     }
 }

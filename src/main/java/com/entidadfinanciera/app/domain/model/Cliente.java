@@ -4,10 +4,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
 
+
 /**
- * Representa un cliente de la entidad financiera.
- * Objeto de dominio puro: no depende de Spring ni de JPA (Arquitectura Hexagonal).
- * Contiene las reglas de negocio exclusivas de sus propios datos.
+ * Cliente de la entidad financiera es solo  de dominio puro: no tiene anotaciones
+ * de Spring ni de JPA porque no debe conocer cómo se persiste ni cómo se expone por HTTP.
+ * La única regla  que vive aquí es que el cleinte tiene que ser mayor de edad, porque depende
+ * únicamente de un dato propio del cliente (su fecha de nacimiento).
  */
 public class Cliente {
 
@@ -38,7 +40,7 @@ public class Cliente {
 
     /**
      * Determina si el cliente es mayor de edad a la fecha actual.
-     * Regla de negocio: un cliente menor de edad no puede ser registrado en el sistema.
+     * S un cliente menor de edad no puede ser registrado en el sistema.
      *
      * @return true si tiene 18 años o más
      */

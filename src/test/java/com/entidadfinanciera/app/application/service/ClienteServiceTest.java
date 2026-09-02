@@ -10,6 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -160,13 +164,18 @@ class ClienteServiceTest {
                 .isInstanceOf(ClienteNoEncontradoException.class);
     }
 
-    // --- Caso exitoso: listar todos ---
+    // --- Caso exitoso: listar todos paginado ---
     @Test
-    void listarTodos_debeRetornarListaDeClientes() {
-        when(clienteRepositoryPort.listarTodos()).thenReturn(List.of(clienteValido));
+    void listarTodos_debeRetornarPaginaDeClientes() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Cliente> paginaEsperada = new PageImpl<>(List.of(clienteValido));
 
-        List<Cliente> resultado = clienteService.listarTodos();
+        when(clienteRepositoryPort.listarTodos(pageable)).thenReturn(paginaEsperada);
 
-        assertThat(resultado).hasSize(1);
+        Page<Cliente> resultado = clienteService.listarTodos(pageable);
+
+        assertThat(resultado.getContent()).hasSize(1);
+        assertThat(resultado.getTotalElements()).isEqualTo(1);
+        verify(clienteRepositoryPort).listarTodos(pageable);
     }
 }

@@ -4,8 +4,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Entidad de dominio que representa una cuenta bancaria (Ahorros o Corriente).
- * Encapsula el saldo y la lógica de validación de estados y transiciones.
+ * Cuenta financiera (corriente o ahorros) vinculada a un cliente.
+ * Uso BigDecimal para el saldo en lugar de double: el punto flotante binario
+ * en el dinero no se puede redondear
+ * El campo version soporta bloqueo optimista (JPA @Version en la entidad):
+ * evita que dos transacciones simultáneas sobre la misma cuenta se pisen el saldo y se modifiquen
  */
 public class Cuenta {
 
@@ -18,10 +21,11 @@ public class Cuenta {
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaModificacion;
     private Long clienteId;
+    private Long version;
 
     public Cuenta(Long id, TipoCuenta tipoCuenta, String numeroCuenta, EstadoCuenta estado,
                   BigDecimal saldo, boolean exentaGmf, LocalDateTime fechaCreacion,
-                  LocalDateTime fechaModificacion, Long clienteId) {
+                  LocalDateTime fechaModificacion, Long clienteId, Long version) {
         this.id = id;
         this.tipoCuenta = tipoCuenta;
         this.numeroCuenta = numeroCuenta;
@@ -31,34 +35,22 @@ public class Cuenta {
         this.fechaCreacion = fechaCreacion;
         this.fechaModificacion = fechaModificacion;
         this.clienteId = clienteId;
+        this.version = version;
     }
 
-    /**
-     * Valida si la cuenta permite realizar retiros o transferencias según su estado actual.
-     *
-     * @return true si la cuenta está en estado ACTIVA
-     */
     public boolean puedeCancelarse() {
         return saldo.compareTo(BigDecimal.ZERO) == 0;
     }
+    /** El PDF exige que solo se pueda cancelar una cuenta cuando su saldo está exactamente en $0. */
 
     public boolean esAhorros() {
         return tipoCuenta == TipoCuenta.AHORROS;
     }
 
     /**
-     * Verifica si la cuenta puede cambiar al nuevo estado solicitado.
-     *
-     * @param nuevoEstado Estado al que se desea transicionar
-     * @return true si la transición de estado es válida
+     * Ahorros nunca puede quedar en negativo; corriente sí puede (permite sobregiro),
+     * porque el PDF solo restringe el saldo negativo para el tipo ahorros explícitamente.
      */
-
-    public boolean puedeTransicionarA(EstadoCuenta nuevoEstado) {
-        if (this.estado == EstadoCuenta.CANCELADA) {
-            return false; // estado terminal, no admite ningún cambio
-        }
-        return this.estado != nuevoEstado; // no permitir "cambiar" al mismo estado
-    }
 
     public void validarSaldoParaTipo(BigDecimal nuevoSaldo) {
         if (esAhorros() && nuevoSaldo.compareTo(BigDecimal.ZERO) < 0) {
@@ -66,7 +58,20 @@ public class Cuenta {
         }
     }
 
-    // Getters y setters
+
+    /**
+     * Define qué cambios de estado son válidos. CANCELADA es terminal (una vez cancelada,
+     * la cuenta no vuelve a operar) y no se permite "cambiar" a un estado igual al actual,
+     * porque eso no representa ninguna transición real por lo mismo que ya esta cancelada
+     */
+
+    public boolean puedeTransicionarA(EstadoCuenta nuevoEstado) {
+        if (this.estado == EstadoCuenta.CANCELADA) {
+            return false;
+        }
+        return this.estado != nuevoEstado;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public TipoCuenta getTipoCuenta() { return tipoCuenta; }
@@ -85,4 +90,6 @@ public class Cuenta {
     public void setFechaModificacion(LocalDateTime fechaModificacion) { this.fechaModificacion = fechaModificacion; }
     public Long getClienteId() { return clienteId; }
     public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
+    public Long getVersion() { return version; }
+    public void setVersion(Long version) { this.version = version; }
 }
