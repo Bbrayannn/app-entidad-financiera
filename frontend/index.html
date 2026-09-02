@@ -2,78 +2,419 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Entidad Financiera - Panel básico</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Entidad Financiera — Panel interno</title>
     <style>
-        body { font-family: sans-serif; max-width: 700px; margin: 40px auto; }
-        input, select, button { padding: 6px; margin: 4px 0; display: block; width: 100%; }
-        button { cursor: pointer; background: #2563eb; color: white; border: none; border-radius: 4px; padding: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        td, th { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        #error { color: red; }
+        :root {
+            --azul: #0f2942;
+            --azul-claro: #1e4a72;
+            --teal: #0d7d6f;
+            --fondo: #f4f6f8;
+            --card: #ffffff;
+            --borde: #dde3e8;
+            --texto: #1a2733;
+            --texto-suave: #5b6b7a;
+            --error: #b3261e;
+            --error-fondo: #fdecea;
+            --exito: #0d7d6f;
+            --radio: 6px;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: var(--fondo);
+            color: var(--texto);
+            margin: 0;
+        }
+        header {
+            background: var(--azul);
+            color: white;
+            padding: 18px 32px;
+        }
+        header h1 { margin: 0; font-size: 1.15rem; font-weight: 600; letter-spacing: 0.2px; }
+        header span { color: #9fb4c7; font-size: 0.8rem; }
+
+        nav {
+            display: flex;
+            gap: 4px;
+            background: var(--azul-claro);
+            padding: 0 28px;
+        }
+        nav button {
+            background: transparent;
+            border: none;
+            color: #cfe0ee;
+            padding: 12px 18px;
+            font-size: 0.88rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        nav button.activo {
+            color: white;
+            border-bottom-color: var(--teal);
+            font-weight: 600;
+        }
+
+        main { max-width: 980px; margin: 28px auto; padding: 0 20px; }
+        .seccion { display: none; }
+        .seccion.activa { display: block; }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--borde);
+            border-radius: var(--radio);
+            padding: 20px 22px;
+            margin-bottom: 18px;
+        }
+        .card h2 { margin: 0 0 14px; font-size: 1rem; color: var(--azul); }
+
+        .campo { margin-bottom: 12px; }
+        .campo label { display: block; font-size: 0.8rem; color: var(--texto-suave); margin-bottom: 4px; }
+        .campo input, .campo select {
+            width: 100%;
+            padding: 9px 10px;
+            border: 1px solid var(--borde);
+            border-radius: var(--radio);
+            font-size: 0.92rem;
+            background: white;
+        }
+        .campo input.invalido, .campo select.invalido { border-color: var(--error); background: var(--error-fondo); }
+        .campo .msg-error { color: var(--error); font-size: 0.78rem; margin-top: 3px; min-height: 1em; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+
+        button.primario {
+            background: var(--teal);
+            color: white;
+            border: none;
+            border-radius: var(--radio);
+            padding: 10px 18px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button.primario:hover { background: #0a6459; }
+        button.secundario {
+            background: transparent;
+            border: 1px solid var(--borde);
+            border-radius: var(--radio);
+            padding: 6px 12px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            color: var(--texto-suave);
+        }
+
+        .alerta-general {
+            background: var(--error-fondo);
+            color: var(--error);
+            border: 1px solid #f3c6c2;
+            border-radius: var(--radio);
+            padding: 10px 12px;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            display: none;
+        }
+        .alerta-general.visible { display: block; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+        th { text-align: left; color: var(--texto-suave); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; padding: 8px 10px; border-bottom: 2px solid var(--borde); }
+        td { padding: 9px 10px; border-bottom: 1px solid var(--borde); }
+        .num { font-variant-numeric: tabular-nums; font-family: "SF Mono", Consolas, monospace; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 600; }
+        .badge.activa { background: #e3f3ef; color: var(--exito); }
+        .badge.inactiva { background: #f1f1f1; color: var(--texto-suave); }
+        .badge.cancelada { background: var(--error-fondo); color: var(--error); }
+
+        #traza { font-family: "SF Mono", Consolas, monospace; font-size: 0.78rem; background: #0f2942; color: #cfe0ee; padding: 12px; border-radius: var(--radio); max-height: 260px; overflow-y: auto; }
+        #traza .linea { margin-bottom: 6px; }
+        #traza .ok { color: #7fd8b9; }
+        #traza .err { color: #f2a4a0; }
     </style>
 </head>
 <body>
-<h1>Clientes - Entidad Financiera</h1>
 
-<h3>Crear cliente</h3>
-<select id="tipoIdentificacion">
-    <option value="CC">CC</option><option value="CE">CE</option>
-    <option value="TI">TI</option><option value="PASAPORTE">Pasaporte</option>
-</select>
-<input id="numeroIdentificacion" placeholder="Número de identificación">
-<input id="nombres" placeholder="Nombres">
-<input id="apellido" placeholder="Apellido">
-<input id="correoElectronico" placeholder="Correo electrónico">
-<input id="fechaNacimiento" type="date">
-<button onclick="crearCliente()">Crear cliente</button>
-<p id="error"></p>
+<header>
+    <h1>Entidad Financiera — Panel interno</h1>
+    <span>Backend: Spring Boot / PostgreSQL — API en <code>/api</code></span>
+</header>
 
-<h3>Clientes registrados</h3>
-<table id="tablaClientes">
-    <thead><tr><th>ID</th><th>Nombres</th><th>Correo</th><th>Fecha creación</th></tr></thead>
-    <tbody></tbody>
-</table>
+<nav>
+    <button class="activo" data-seccion="clientes">Clientes</button>
+    <button data-seccion="cuentas">Cuentas</button>
+    <button data-seccion="transacciones">Transacciones</button>
+    <button data-seccion="traza">Registro de peticiones</button>
+</nav>
+
+<main>
+
+    <!-- ===================== CLIENTES ===================== -->
+    <section class="seccion activa" id="sec-clientes">
+        <div class="card">
+            <h2>Crear cliente</h2>
+            <div class="alerta-general" id="alertaCliente"></div>
+            <div class="grid-2">
+                <div class="campo">
+                    <label>Tipo de identificación</label>
+                    <select id="tipoIdentificacion">
+                        <option value="CC">CC</option><option value="CE">CE</option>
+                        <option value="TI">TI</option><option value="PASAPORTE">Pasaporte</option>
+                    </select>
+                </div>
+                <div class="campo">
+                    <label>Número de identificación</label>
+                    <input id="numeroIdentificacion" placeholder="Solo números">
+                    <div class="msg-error" id="err-numeroIdentificacion"></div>
+                </div>
+                <div class="campo">
+                    <label>Nombres</label>
+                    <input id="nombres">
+                    <div class="msg-error" id="err-nombres"></div>
+                </div>
+                <div class="campo">
+                    <label>Apellido</label>
+                    <input id="apellido">
+                    <div class="msg-error" id="err-apellido"></div>
+                </div>
+                <div class="campo">
+                    <label>Correo electrónico</label>
+                    <input id="correoElectronico" placeholder="nombre@correo.com">
+                    <div class="msg-error" id="err-correoElectronico"></div>
+                </div>
+                <div class="campo">
+                    <label>Fecha de nacimiento</label>
+                    <input id="fechaNacimiento" type="date">
+                    <div class="msg-error" id="err-fechaNacimiento"></div>
+                </div>
+            </div>
+            <button class="primario" onclick="crearCliente()">Crear cliente</button>
+        </div>
+
+        <div class="card">
+            <h2>Clientes registrados</h2>
+            <table>
+                <thead><tr><th>ID</th><th>Identificación</th><th>Nombre</th><th>Correo</th><th>Creado</th></tr></thead>
+                <tbody id="tablaClientes"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ===================== CUENTAS ===================== -->
+    <section class="seccion" id="sec-cuentas">
+        <div class="card">
+            <h2>Crear cuenta</h2>
+            <div class="alerta-general" id="alertaCuenta"></div>
+            <div class="grid-2">
+                <div class="campo">
+                    <label>Cliente (ID)</label>
+                    <input id="cuentaClienteId" type="number">
+                    <div class="msg-error" id="err-clienteId"></div>
+                </div>
+                <div class="campo">
+                    <label>Tipo de cuenta</label>
+                    <select id="tipoCuenta"><option value="AHORROS">Ahorros</option><option value="CORRIENTE">Corriente</option></select>
+                </div>
+            </div>
+            <button class="primario" onclick="crearCuenta()">Crear cuenta</button>
+        </div>
+
+        <div class="card">
+            <h2>Consultar cuentas de un cliente</h2>
+            <div class="campo" style="max-width:220px">
+                <label>Cliente (ID)</label>
+                <input id="consultaClienteId" type="number">
+            </div>
+            <button class="secundario" onclick="cargarCuentasDeCliente()">Consultar</button>
+            <table style="margin-top:14px">
+                <thead><tr><th>Número</th><th>Tipo</th><th>Estado</th><th>Saldo</th></tr></thead>
+                <tbody id="tablaCuentas"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ===================== TRANSACCIONES ===================== -->
+    <section class="seccion" id="sec-transacciones">
+        <div class="card">
+            <h2>Consignación / Retiro</h2>
+            <div class="alerta-general" id="alertaTransaccion"></div>
+            <div class="grid-2">
+                <div class="campo"><label>Cuenta (ID)</label><input id="txCuentaId" type="number"></div>
+                <div class="campo"><label>Monto</label><input id="txMonto" type="number" step="0.01"></div>
+            </div>
+            <div class="campo"><label>Descripción</label><input id="txDescripcion"></div>
+            <button class="primario" onclick="realizarTransaccion('consignaciones')">Consignar</button>
+            <button class="secundario" onclick="realizarTransaccion('retiros')">Retirar</button>
+        </div>
+
+        <div class="card">
+            <h2>Estado de cuenta</h2>
+            <div class="campo" style="max-width:220px"><label>Cuenta (ID)</label><input id="estadoCuentaId" type="number"></div>
+            <button class="secundario" onclick="cargarEstadoCuenta()">Consultar movimientos</button>
+            <table style="margin-top:14px">
+                <thead><tr><th>Fecha</th><th>Tipo</th><th>Monto</th><th>Saldo resultante</th></tr></thead>
+                <tbody id="tablaMovimientos"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ===================== TRAZA ===================== -->
+    <section class="seccion" id="sec-traza">
+        <div class="card">
+            <h2>Registro de peticiones (última sesión)</h2>
+            <div id="traza"></div>
+        </div>
+    </section>
+
+</main>
 
 <script>
-    const API = "http://localhost:8080/api/clientes";
+    const API = "http://localhost:8080/api";
+    // -------- navegación de pestañas --------
+    document.querySelectorAll("nav button").forEach(btn => {
+        btn.addEventListener("click", () => {
+            document.querySelectorAll("nav button").forEach(b => b.classList.remove("activo"));
+            document.querySelectorAll(".seccion").forEach(s => s.classList.remove("activa"));
+            btn.classList.add("activo");
+            document.getElementById("sec-" + btn.dataset.seccion).classList.add("activa");
+        });
+    });
 
-    async function crearCliente() {
-        document.getElementById("error").textContent = "";
-        const body = {
-            tipoIdentificacion: document.getElementById("tipoIdentificacion").value,
-            numeroIdentificacion: document.getElementById("numeroIdentificacion").value,
-            nombres: document.getElementById("nombres").value,
-            apellido: document.getElementById("apellido").value,
-            correoElectronico: document.getElementById("correoElectronico").value,
-            fechaNacimiento: document.getElementById("fechaNacimiento").value
-        };
+    // -------- traza de peticiones --------
+    function registrarTraza(metodo, url, status, detalle) {
+        const linea = document.createElement("div");
+        linea.className = "linea " + (status >= 200 && status < 300 ? "ok" : "err");
+        const hora = new Date().toLocaleTimeString();
+        linea.textContent = `[${hora}] ${metodo} ${url} → ${status} ${detalle ? "— " + detalle : ""}`;
+        document.getElementById("traza").prepend(linea);
+    }
+
+    // -------- helper central de peticiones + mapeo de errores por campo --------
+    async function llamarApi(metodo, url, body, prefijoErrorCampos, alertaId) {
+        limpiarErrores(prefijoErrorCampos);
+        const alerta = document.getElementById(alertaId);
+        alerta.classList.remove("visible");
         try {
-            const res = await fetch(API, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
+            const res = await fetch(url, {
+                method: metodo,
+                headers: body ? { "Content-Type": "application/json" } : undefined,
+                body: body ? JSON.stringify(body) : undefined
             });
+            const texto = await res.text();
+            const data = texto ? JSON.parse(texto) : null;
+
             if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.mensaje || "Error al crear cliente");
+                registrarTraza(metodo, url, res.status, data?.mensaje || "error");
+                // Si el backend manda "detalles" (errores @Valid campo por campo), los mostramos
+                // exactamente en el input correspondiente, no como un error genérico de creación.
+                if (data?.detalles && Array.isArray(data.detalles)) {
+                    data.detalles.forEach(d => {
+                        const [campo, mensaje] = d.split(":").map(s => s.trim());
+                        mostrarErrorCampo(campo, mensaje || d);
+                    });
+                } else {
+                    alerta.textContent = data?.mensaje || "Ocurrió un error al procesar la solicitud.";
+                    alerta.classList.add("visible");
+                }
+                return null;
             }
-            await cargarClientes();
+            registrarTraza(metodo, url, res.status, "ok");
+            return data;
         } catch (e) {
-            document.getElementById("error").textContent = e.message;
+            registrarTraza(metodo, url, 0, e.message);
+            alerta.textContent = "No fue posible conectar con el servidor.";
+            alerta.classList.add("visible");
+            return null;
         }
     }
 
+    function mostrarErrorCampo(campo, mensaje) {
+        const inputEl = document.getElementById(campo);
+        const errEl = document.getElementById("err-" + campo);
+        if (inputEl) inputEl.classList.add("invalido");
+        if (errEl) errEl.textContent = mensaje;
+    }
+    function limpiarErrores(prefijo) {
+        document.querySelectorAll(`[id^="err-"]`).forEach(el => el.textContent = "");
+        document.querySelectorAll("input, select").forEach(el => el.classList.remove("invalido"));
+    }
+
+    // -------- CLIENTES --------
+    async function crearCliente() {
+        const body = {
+            tipoIdentificacion: val("tipoIdentificacion"),
+            numeroIdentificacion: val("numeroIdentificacion"),
+            nombres: val("nombres"),
+            apellido: val("apellido"),
+            correoElectronico: val("correoElectronico"),
+            fechaNacimiento: val("fechaNacimiento")
+        };
+        const creado = await llamarApi("POST", `${API}/clientes`, body, "cliente", "alertaCliente");
+        if (creado) { limpiarFormularioCliente(); cargarClientes(); }
+    }
+
     async function cargarClientes() {
-        const res = await fetch(API);
-        const clientes = await res.json();
-        const tbody = document.querySelector("#tablaClientes tbody");
+        const data = await llamarApi("GET", `${API}/clientes?size=50`, null, "cliente", "alertaCliente");
+        const lista = data?.content ?? data ?? []; // soporta Page<> o List<> según el backend
+        const tbody = document.getElementById("tablaClientes");
         tbody.innerHTML = "";
-        clientes.forEach(c => {
+        lista.forEach(c => {
             const fila = document.createElement("tr");
-            fila.innerHTML = `<td>${c.id}</td><td>${c.nombres} ${c.apellido}</td><td>${c.correoElectronico}</td><td>${c.fechaCreacion ?? ""}</td>`;
+            fila.innerHTML = `<td>${c.id}</td><td>${c.tipoIdentificacion} ${c.numeroIdentificacion}</td>
+        <td>${c.nombres} ${c.apellido}</td><td>${c.correoElectronico}</td>
+        <td>${(c.fechaCreacion ?? "").toString().slice(0,10)}</td>`;
             tbody.appendChild(fila);
         });
     }
+
+    function limpiarFormularioCliente() {
+        ["numeroIdentificacion","nombres","apellido","correoElectronico","fechaNacimiento"].forEach(id => document.getElementById(id).value = "");
+    }
+
+    // -------- CUENTAS --------
+    async function crearCuenta() {
+        const body = { clienteId: Number(val("cuentaClienteId")), tipoCuenta: val("tipoCuenta"), exentaGmf: false };
+        const creada = await llamarApi("POST", `${API}/cuentas`, body, "cuenta", "alertaCuenta");
+        if (creada) cargarCuentasDeCliente();
+    }
+
+    async function cargarCuentasDeCliente() {
+        const id = val("consultaClienteId") || val("cuentaClienteId");
+        if (!id) return;
+        const data = await llamarApi("GET", `${API}/cuentas?clienteId=${id}`, null, "cuenta", "alertaCuenta");
+        const tbody = document.getElementById("tablaCuentas");
+        tbody.innerHTML = "";
+        (data ?? []).forEach(c => {
+            const fila = document.createElement("tr");
+            fila.innerHTML = `<td class="num">${c.numeroCuenta}</td><td>${c.tipoCuenta}</td>
+        <td><span class="badge ${c.estado.toLowerCase()}">${c.estado}</span></td>
+        <td class="num">$ ${Number(c.saldo).toLocaleString("es-CO")}</td>`;
+            tbody.appendChild(fila);
+        });
+    }
+
+    // -------- TRANSACCIONES --------
+    async function realizarTransaccion(tipo) {
+        const body = { cuentaId: Number(val("txCuentaId")), monto: Number(val("txMonto")), descripcion: val("txDescripcion") };
+        const resultado = await llamarApi("POST", `${API}/transacciones/${tipo}`, body, "transaccion", "alertaTransaccion");
+        if (resultado) document.getElementById("txMonto").value = "";
+    }
+
+    async function cargarEstadoCuenta() {
+        const id = val("estadoCuentaId");
+        const data = await llamarApi("GET", `${API}/transacciones?cuentaId=${id}`, null, "transaccion", "alertaTransaccion");
+        const tbody = document.getElementById("tablaMovimientos");
+        tbody.innerHTML = "";
+        (data ?? []).forEach(t => {
+            (t.movimientos ?? []).forEach(m => {
+                const fila = document.createElement("tr");
+                fila.innerHTML = `<td>${(t.fechaCreacion ?? "").toString().slice(0,16).replace("T"," ")}</td>
+          <td>${m.tipoMovimiento}</td><td class="num">$ ${Number(m.monto).toLocaleString("es-CO")}</td>
+          <td class="num">$ ${Number(m.saldoResultante).toLocaleString("es-CO")}</td>`;
+                tbody.appendChild(fila);
+            });
+        });
+    }
+
+    function val(id) { return document.getElementById(id).value.trim(); }
 
     cargarClientes();
 </script>
